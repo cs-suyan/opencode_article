@@ -9,11 +9,10 @@ description = "AI 热点新闻文章自动生成器"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "openai>=1.0.0",
     "requests>=2.28.0",
     "beautifulsoup4>=4.11.0",
-    "lxml>=4.9.0",
-    "schedule>=1.1.0",
     "toml>=0.10.2",
     "python-dotenv>=1.0.0",
+    "kivy>=2.2.0",
+    "plyer>=2.1.0",
 ]
