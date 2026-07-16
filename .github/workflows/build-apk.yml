@@ -1,0 +1,72 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - 'output/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            python3-pip \
+            python3-virtualenv \
+            git \
+            wget \
+            unzip \
+            openjdk-17-jdk \
+            ccache \
+            autoconf \
+            libtool \
+            libssl-dev \
+            libltdl-dev \
+            pkg-config \
+            libffi-dev \
+            libncurses-dev \
+            zlib1g-dev \
+            curl \
+            libc6-dev-i386
+
+      - name: Install buildozer
+        run: |
+          pip install --upgrade pip setuptools virtualenv
+          pip install buildozer cython
+
+      - name: Inject API key from secrets
+        run: |
+          if [ -n "${{ secrets.LLM_API_KEY }}" ]; then
+            echo "::add-mask::${{ secrets.LLM_API_KEY }}"
+            sed -i "s|^android.env = LLM_API_KEY=.*|android.env = LLM_API_KEY=${{ secrets.LLM_API_KEY }}|" buildozer.spec
+            echo "API key injected"
+          else
+            echo "WARNING: No LLM_API_KEY secret set, using existing key in buildozer.spec"
+          fi
+
+      - name: Build APK with buildozer
+        run: |
+          printf 'y\n' | buildozer android debug
+        env:
+          BUILD_REQUIREMENTS: ""
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI-News-APK
+          path: bin/*.apk
+          retention-days: 30

@@ -1,0 +1,7 @@
+[
+  {
+    "permission": "edit",
+    "action": "allow",
+    "pattern": "D:\\Code\\opencode_article\\**"
+  }
+]

@@ -1,0 +1,20 @@
+[llm]
+provider = "siliconflow"
+# api_key 通过 .env 文件中的 LLM_API_KEY 设置，优先级高于此处
+api_key = ""
+base_url = "https://api.siliconflow.cn/v1"
+model = "deepseek-ai/DeepSeek-V4-Pro"
+max_tokens = 8192
+temperature = 0.8
+
+[news]
+platforms = ["netease_sports"]
+top_n = 10
+
+[schedule]
+enabled = false
+time = "09:00"
+
+[output]
+directory = "output"
+date_format = "YYYY-MM-DD"

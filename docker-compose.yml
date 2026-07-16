@@ -1,0 +1,15 @@
+services:
+  buildozer:
+    build:
+      context: .
+      dockerfile: Dockerfile.buildozer
+    container_name: articlegenerator_apk_build
+    volumes:
+      - .:/app
+      - buildozer_cache:/root/.buildozer
+    stdin_open: true
+    tty: true
+    command: bash -c 'printf "y\n" | buildozer android debug'
+
+volumes:
+  buildozer_cache:
