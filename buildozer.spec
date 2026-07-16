@@ -38,16 +38,16 @@ requirements = python3,kivy,requests,beautifulsoup4,python-dotenv,toml,plyer
 #icon.filename = %(source.dir)s/data/icon.png
 
 # (str) Supported Android API level
-android.api = 33
+android.api = 34
 
 # (int) Minimum Android API level
 android.minapi = 21
 
-# (int) Android SDK version to use
-android.sdk = 33
-
 # (str) Android NDK version
 android.ndk = 25b
+
+# (bool) Accept SDK license
+android.accept_sdk_license = True
 
 # (bool) Enable AndroidX (needed for plyer)
 android.enable_androidx = True
@@ -56,7 +56,7 @@ android.enable_androidx = True
 android.permissions = INTERNET
 
 # (str) Android extra Java dependencies (for plyer share)
-android.gradle_dependencies = androidx.core:core:1.12.0
+android.gradle_dependencies = androidx.core:core:1.15.0
 
 # (bool) Indicate whether the application should be fullscreen
 android.fullscreen = 0
@@ -65,7 +65,8 @@ android.fullscreen = 0
 android.archs = arm64-v8a
 
 # (str) Environment variables to set at app startup
-android.env = LLM_API_KEY=sk-qikbtnfrtruaqeibglhfcxjftyrbttrvateiqyeivbcgyxyx
+# Injected by CI via sed: android.env = LLM_API_KEY=<key>
+android.env = LLM_API_KEY=PLACEHOLDER_REPLACE_BY_CI
 
 # (str) Supported iOS version
 # ios.min_version = 12.0

@@ -55,13 +55,16 @@ jobs:
             sed -i "s|^android.env = LLM_API_KEY=.*|android.env = LLM_API_KEY=${{ secrets.LLM_API_KEY }}|" buildozer.spec
             echo "API key injected"
           else
-            echo "WARNING: No LLM_API_KEY secret set, using existing key in buildozer.spec"
+            echo "WARNING: No LLM_API_KEY secret set - app will not work without it"
           fi
 
       - name: Build APK with buildozer
         run: |
           export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
-          unset ANDROID_NDK_HOME ANDROID_NDK_ROOT ANDROID_HOME ANDROID_SDK_ROOT ANDROID_NDK
+          export GRADLE_OPTS="-Xmx2048m -Dorg.gradle.daemon=false"
+          export _JAVA_OPTIONS="-Xmx2048m"
+          unset ANDROID_NDK_HOME ANDROID_NDK_ROOT ANDROID_HOME ANDROID_SDK_ROOT
+          unset ANDROID_NDK ANDROID_NDK_LATEST_HOME GRADLE_HOME
           printf 'y\n' | buildozer android debug
         env:
           BUILD_REQUIREMENTS: ""
