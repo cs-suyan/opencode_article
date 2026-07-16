@@ -60,7 +60,8 @@ jobs:
 
       - name: Build APK with buildozer
         run: |
-          unset ANDROID_NDK_HOME ANDROID_NDK_ROOT ANDROID_HOME ANDROID_SDK_ROOT
+          export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
+          unset ANDROID_NDK_HOME ANDROID_NDK_ROOT ANDROID_HOME ANDROID_SDK_ROOT ANDROID_NDK
           printf 'y\n' | buildozer android debug
         env:
           BUILD_REQUIREMENTS: ""
