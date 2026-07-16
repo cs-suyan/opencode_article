@@ -8,17 +8,13 @@ from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
-_CRASH_LOG = None
-for _p in [
-    "/sdcard/opencode_crash.log",
-    "/storage/emulated/0/Android/data/org.opencode.articlegenerator/files/crash.log",
-]:
-    try:
-        open(_p, "a").close()
-        _CRASH_LOG = _p
-        break
-    except Exception:
-        continue
+_CRASH_LOG_DIR = (
+    os.environ.get("ANDROID_PRIVATE")
+    or os.environ.get("EXTERNAL_STORAGE")
+    or os.path.expanduser("~")
+)
+os.makedirs(_CRASH_LOG_DIR, exist_ok=True)
+_CRASH_LOG = os.path.join(_CRASH_LOG_DIR, "opencode_crash.log")
 
 if _CRASH_LOG:
     def _exception_hook(exc_type, exc_value, exc_tb):

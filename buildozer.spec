@@ -38,7 +38,7 @@ requirements = python3,kivy,requests,beautifulsoup4,python-dotenv,toml,plyer
 #icon.filename = %(source.dir)s/data/icon.png
 
 # (str) Supported Android API level
-android.api = 35
+android.api = 34
 
 # (int) Minimum Android API level
 android.minapi = 21
@@ -56,13 +56,13 @@ android.enable_androidx = True
 android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
 # (str) Android extra Java dependencies (for plyer share)
-android.gradle_dependencies = androidx.core:core:1.15.0
+android.gradle_dependencies = androidx.core:core:1.12.0
 
 # (bool) Indicate whether the application should be fullscreen
 android.fullscreen = 0
 
 # (list) Android architectures to build for
-android.archs = arm64-v8a
+android.archs = arm64-v8a, armeabi-v7a
 
 # (str) Environment variables to set at app startup
 # Injected by CI via sed: android.env = LLM_API_KEY=<key>
