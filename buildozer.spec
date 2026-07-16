@@ -38,7 +38,7 @@ requirements = python3,kivy,requests,beautifulsoup4,python-dotenv,toml,plyer
 #icon.filename = %(source.dir)s/data/icon.png
 
 # (str) Supported Android API level
-android.api = 34
+android.api = 35
 
 # (int) Minimum Android API level
 android.minapi = 21
