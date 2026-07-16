@@ -2,10 +2,31 @@ import os
 import sys
 import random
 import toml
+import traceback
 import threading
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
+
+_CRASH_LOG = None
+for _p in [
+    "/sdcard/opencode_crash.log",
+    "/storage/emulated/0/Android/data/org.opencode.articlegenerator/files/crash.log",
+]:
+    try:
+        open(_p, "a").close()
+        _CRASH_LOG = _p
+        break
+    except Exception:
+        continue
+
+if _CRASH_LOG:
+    def _exception_hook(exc_type, exc_value, exc_tb):
+        with open(_CRASH_LOG, "w", encoding="utf-8") as f:
+            traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
+        sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+    sys.excepthook = _exception_hook
 
 from kivy.app import App
 from kivy.clock import mainthread
@@ -266,4 +287,15 @@ class ArticleGenApp(App):
 
 
 if __name__ == "__main__":
-    ArticleGenApp().run()
+    try:
+        ArticleGenApp().run()
+    except Exception:
+        import traceback, io
+        buf = io.StringIO()
+        traceback.print_exc(file=buf)
+        msg = buf.getvalue()
+        if _CRASH_LOG:
+            with open(_CRASH_LOG, "a", encoding="utf-8") as f:
+                f.write("\n=== App.run() crashed ===\n")
+                f.write(msg)
+        raise

@@ -53,7 +53,7 @@ android.accept_sdk_license = True
 android.enable_androidx = True
 
 # (str) Android permissions
-android.permissions = INTERNET
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
 # (str) Android extra Java dependencies (for plyer share)
 android.gradle_dependencies = androidx.core:core:1.15.0
