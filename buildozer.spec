@@ -29,7 +29,7 @@ version = 1.0.0
 main.py = app_main.py
 
 # (list) Python requirements
-requirements = python3,kivy,requests,beautifulsoup4,python-dotenv,toml,plyer
+requirements = python3,kivy==2.2.1,requests,beautifulsoup4,python-dotenv,toml,plyer
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
@@ -53,7 +53,7 @@ android.accept_sdk_license = True
 android.enable_androidx = True
 
 # (str) Android permissions
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
+android.permissions = INTERNET
 
 # (str) Android extra Java dependencies (for plyer share)
 android.gradle_dependencies = androidx.core:core:1.12.0

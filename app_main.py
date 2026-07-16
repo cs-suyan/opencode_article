@@ -8,22 +8,53 @@ from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
-_CRASH_LOG_DIR = (
-    os.environ.get("ANDROID_PRIVATE")
-    or os.environ.get("EXTERNAL_STORAGE")
-    or os.path.expanduser("~")
-)
-os.makedirs(_CRASH_LOG_DIR, exist_ok=True)
-_CRASH_LOG = os.path.join(_CRASH_LOG_DIR, "opencode_crash.log")
+# ---- Fix 1: Reliable crash handler (ANDROID_PRIVATE fallback chain) ----
+_CRASH_LOG = None
+for _env_key in ["ANDROID_PRIVATE", "EXTERNAL_STORAGE", "ANDROID_APP_PATH"]:
+    _d = os.environ.get(_env_key)
+    if _d and os.path.isdir(_d) and os.access(_d, os.W_OK):
+        _p = os.path.join(_d, "opencode_crash.log")
+        try:
+            open(_p, "a").close()
+            _CRASH_LOG = _p
+            break
+        except:
+            continue
+if not _CRASH_LOG:
+    import tempfile
+    try:
+        _CRASH_LOG = os.path.join(tempfile.gettempdir(), "opencode_crash.log")
+        open(_CRASH_LOG, "a").close()
+    except:
+        pass
 
 if _CRASH_LOG:
     def _exception_hook(exc_type, exc_value, exc_tb):
-        with open(_CRASH_LOG, "w", encoding="utf-8") as f:
-            traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
+        try:
+            with open(_CRASH_LOG, "w", encoding="utf-8") as f:
+                traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
+        except:
+            pass
         sys.__excepthook__(exc_type, exc_value, exc_tb)
-
     sys.excepthook = _exception_hook
 
+# ---- Fix 2: Correct data path resolution ----
+if os.environ.get("ANDROID_PRIVATE"):
+    _DATA_DIR = os.environ["ANDROID_PRIVATE"]
+else:
+    _DATA_DIR = os.getcwd()
+
+def _data_path(*parts):
+    return os.path.join(_DATA_DIR, *parts)
+
+# ---- Fix 3: Try stdout reconfigure but don't crash on Android ----
+try:
+    if sys.stdout is not None and hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+except:
+    pass
+
+# ---- Imports ----
 from kivy.app import App
 from kivy.clock import mainthread
 from kivy.uix.popup import Popup
@@ -32,11 +63,6 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
-
-try:
-    sys.stdout.reconfigure(encoding='utf-8')
-except Exception:
-    pass
 
 try:
     from plyer import filechooser, share
@@ -52,7 +78,8 @@ load_dotenv()
 
 
 def load_config() -> dict:
-    cfg = toml.load("config.toml")
+    cfg_path = _data_path("config.toml")
+    cfg = toml.load(cfg_path)
     env_key = os.getenv("LLM_API_KEY")
     if env_key:
         cfg.setdefault("llm", {})["api_key"] = env_key
@@ -113,6 +140,12 @@ class ArticleGenApp(App):
 
         return root
 
+    def _output_dir(self):
+        d = self.config_data.get("output", {}).get("directory", "output")
+        if os.environ.get("ANDROID_PRIVATE"):
+            return _data_path(d)
+        return d
+
     @mainthread
     def append_log(self, text: str):
         self._log_lines.append(text)
@@ -142,7 +175,7 @@ class ArticleGenApp(App):
                 temperature=llm_cfg.get("temperature", 0.8),
             )
 
-            self.file_saver = FileSaver(base_dir=output_cfg.get("directory", "output"))
+            self.file_saver = FileSaver(base_dir=self._output_dir())
 
             self.append_log("=" * 30)
             self.append_log("热点新闻采集开始...")
@@ -203,15 +236,13 @@ class ArticleGenApp(App):
 
         except Exception as e:
             self.append_log(f"\n错误：{e}")
-            import traceback
             self.append_log(traceback.format_exc())
         finally:
             self.is_running = False
             self.start_btn.disabled = False
 
     def share_article(self):
-        output_dir = self.config_data.get("output", {}).get("directory", "output")
-        today_path = Path(output_dir) / datetime.now().strftime("%Y-%m-%d")
+        today_path = Path(self._output_dir()) / datetime.now().strftime("%Y-%m-%d")
         files = []
         if today_path.exists():
             files = sorted(today_path.glob("*.md"))
@@ -247,8 +278,14 @@ class ArticleGenApp(App):
                 if HAS_PLYER:
                     share.share(title=latest.stem, text=article_text)
                 else:
-                    Path(Path(output_dir).parent / "share_temp.md").write_text(article_text, encoding="utf-8")
-                    info = Popup(title="提示", content=Label(text="文件已导出到项目目录 share_temp.md"), size_hint=[0.6, 0.4])
+                    Path(_data_path("share_temp.md")).write_text(
+                        article_text, encoding="utf-8"
+                    )
+                    info = Popup(
+                        title="提示",
+                        content=Label(text=f"文件已导出到 {_data_path('share_temp.md')}"),
+                        size_hint=[0.6, 0.4],
+                    )
                     info.open()
             except Exception as e:
                 err = Popup(title="错误", content=Label(text=str(e)), size_hint=[0.7, 0.5])
@@ -263,8 +300,7 @@ class ArticleGenApp(App):
         popup.open()
 
     def show_articles(self):
-        output_dir = self.config_data.get("output", {}).get("directory", "output")
-        today_path = Path(output_dir) / datetime.now().strftime("%Y-%m-%d")
+        today_path = Path(self._output_dir()) / datetime.now().strftime("%Y-%m-%d")
         files = []
         if today_path.exists():
             files = sorted(today_path.glob("*.md"))
@@ -286,12 +322,15 @@ if __name__ == "__main__":
     try:
         ArticleGenApp().run()
     except Exception:
-        import traceback, io
+        import io
         buf = io.StringIO()
         traceback.print_exc(file=buf)
         msg = buf.getvalue()
         if _CRASH_LOG:
-            with open(_CRASH_LOG, "a", encoding="utf-8") as f:
-                f.write("\n=== App.run() crashed ===\n")
-                f.write(msg)
+            try:
+                with open(_CRASH_LOG, "a", encoding="utf-8") as f:
+                    f.write("\n=== App.run() crashed ===\n")
+                    f.write(msg)
+            except:
+                pass
         raise
