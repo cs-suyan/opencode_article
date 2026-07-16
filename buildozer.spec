@@ -76,7 +76,7 @@ android.env = LLM_API_KEY=sk-qikbtnfrtruaqeibglhfcxjftyrbttrvateiqyeivbcgyxyx
 [buildozer]
 
 # (int) Log level (0 = debug, 1 = info, 2 = warning, 3 = error, 4 = critical)
-log_level = 1
+log_level = 2
 
 # (str) Path to build artifact storage
 # build_dir = ../.buildozer
